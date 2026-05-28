@@ -132,7 +132,7 @@ const state = {
   formation: "4-3-3",
   teamName: "荷兰国家队 2026",
   lineup: {},
-  captain: "virgil-van-dijk",
+  captain: null,
   filter: "ALL",
   search: "",
   selectedPlayer: null
@@ -144,7 +144,6 @@ let toastTimer = null;
 document.addEventListener("DOMContentLoaded", () => {
   cacheDom();
   bindEvents();
-  seedDefaultLineup();
   loadStateFromHash();
   render();
 });
@@ -228,7 +227,7 @@ function bindEvents() {
   });
 
   dom.squadList.addEventListener("dragover", (event) => {
-    if (dragPayload(event)) event.preventDefault();
+    if (hasDragPayload(event)) event.preventDefault();
   });
 
   dom.squadList.addEventListener("drop", (event) => {
@@ -286,7 +285,7 @@ function bindEvents() {
 
   dom.pitch.addEventListener("dragover", (event) => {
     const slotElement = event.target.closest("[data-slot-id]");
-    if (!slotElement || !dragPayload(event)) return;
+    if (!slotElement || !hasDragPayload(event)) return;
     event.preventDefault();
     slotElement.classList.add("is-target");
   });
@@ -330,10 +329,6 @@ function bindEvents() {
     render();
     showToast("首发已清空");
   });
-}
-
-function seedDefaultLineup() {
-  fillCurrentFormation(defaultStarters);
 }
 
 function fillCurrentFormation(playerIds) {
@@ -625,6 +620,10 @@ function dragPayload(event) {
   } catch {
     return null;
   }
+}
+
+function hasDragPayload(event) {
+  return Array.from(event.dataTransfer.types || []).includes("application/json");
 }
 
 async function writeClipboard(text) {
