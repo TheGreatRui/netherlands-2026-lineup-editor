@@ -1,7 +1,5 @@
 "use strict";
 
-const DATA_RETRIEVED = "2026-05-28";
-
 const players = [
   { id: "bart-verbruggen", name: "Bart Verbruggen", position: "Goalkeeper", group: "GK", age: 23, club: "Brighton & Hove Albion", valueText: "€40.00m", value: 40 },
   { id: "robin-roefs", name: "Robin Roefs", position: "Goalkeeper", group: "GK", age: 23, club: "Sunderland AFC", valueText: "€25.00m", value: 25 },
@@ -132,7 +130,6 @@ const state = {
   formation: "4-3-3",
   teamName: "荷兰国家队 2026",
   lineup: {},
-  captain: null,
   filter: "ALL",
   search: "",
   selectedPlayer: null
@@ -169,8 +166,6 @@ function cacheDom() {
   dom.pitchFormation = document.querySelector("#pitchFormation");
   dom.averageAge = document.querySelector("#averageAge");
   dom.lineupValue = document.querySelector("#lineupValue");
-  dom.captainName = document.querySelector("#captainName");
-  dom.captainBadge = document.querySelector("#captainBadge");
   dom.lineupList = document.querySelector("#lineupList");
   dom.benchList = document.querySelector("#benchList");
   dom.benchCount = document.querySelector("#benchCount");
@@ -235,7 +230,6 @@ function bindEvents() {
     if (!payload || payload.type !== "slot") return;
     event.preventDefault();
     state.lineup[payload.slotId] = null;
-    ensureCaptain();
     render();
     showToast("已移出首发");
   });
@@ -246,17 +240,9 @@ function bindEvents() {
       event.stopPropagation();
       const slotElement = actionButton.closest("[data-slot-id]");
       const slotId = slotElement.dataset.slotId;
-      const playerId = state.lineup[slotId];
       if (actionButton.dataset.action === "clear") {
         state.lineup[slotId] = null;
-        ensureCaptain();
         render();
-        return;
-      }
-      if (actionButton.dataset.action === "captain" && playerId) {
-        state.captain = playerId;
-        render();
-        showToast(`${playerById.get(playerId).name} 已设为队长`);
       }
       return;
     }
@@ -306,7 +292,6 @@ function bindEvents() {
 
   dom.autoFill.addEventListener("click", () => {
     fillCurrentFormation(defaultStarters);
-    state.captain = "virgil-van-dijk";
     render();
     showToast("已载入默认首发");
   });
@@ -325,7 +310,6 @@ function bindEvents() {
   dom.clearLineup.addEventListener("click", () => {
     state.lineup = {};
     state.selectedPlayer = null;
-    state.captain = null;
     render();
     showToast("首发已清空");
   });
@@ -336,7 +320,6 @@ function fillCurrentFormation(playerIds) {
   currentSlots().forEach((formationSlot, index) => {
     state.lineup[formationSlot.id] = playerIds[index] || null;
   });
-  ensureCaptain();
 }
 
 function reshapeLineup(nextFormation) {
@@ -349,7 +332,6 @@ function reshapeLineup(nextFormation) {
   currentSlots().forEach((formationSlot, index) => {
     state.lineup[formationSlot.id] = selected[index] || null;
   });
-  ensureCaptain();
 }
 
 function currentSlots() {
@@ -385,7 +367,6 @@ function dropOnSlot(payload, targetSlotId) {
     state.lineup[sourceSlotId] = targetPlayer || null;
   }
 
-  ensureCaptain();
   render();
 }
 
@@ -394,13 +375,6 @@ function assignPlayerToSlot(playerId, slotId) {
     if (state.lineup[key] === playerId) state.lineup[key] = null;
   });
   state.lineup[slotId] = playerId;
-  if (!state.captain) state.captain = playerId;
-}
-
-function ensureCaptain() {
-  const selectedIds = new Set(selectedPlayers().map((player) => player.id));
-  if (state.captain && selectedIds.has(state.captain)) return;
-  state.captain = selectedIds.has("virgil-van-dijk") ? "virgil-van-dijk" : [...selectedIds][0] || null;
 }
 
 function selectedPlayers() {
@@ -437,7 +411,6 @@ function renderPitch() {
   const slotsHtml = currentSlots()
     .map((formationSlot) => {
       const player = playerById.get(state.lineup[formationSlot.id]);
-      const isCaptain = player && player.id === state.captain;
       const emptyClass = player ? "" : " is-empty";
       const edgeClass = formationSlot.x >= 78 ? " edge-right" : formationSlot.x <= 22 ? " edge-left" : "";
       const draggable = player ? "true" : "false";
@@ -445,12 +418,11 @@ function renderPitch() {
         ? `
           <span class="slot-position">${formationSlot.label}</span>
           <span class="slot-name">
-            <span class="slot-full">${escapeHtml(player.name)}${isCaptain ? " (C)" : ""}</span>
-            <span class="slot-short">${escapeHtml(compactName(player))}${isCaptain ? " (C)" : ""}</span>
+            <span class="slot-full">${escapeHtml(player.name)}</span>
+            <span class="slot-short">${escapeHtml(compactName(player))}</span>
           </span>
           <span class="slot-club">${escapeHtml(player.club)}</span>
           <span class="slot-tools">
-            <button class="slot-tool ${isCaptain ? "is-captain" : ""}" type="button" data-action="captain" aria-label="设为队长">C</button>
             <button class="slot-tool" type="button" data-action="clear" aria-label="移出首发">×</button>
           </span>
         `
@@ -519,15 +491,12 @@ function renderDetails() {
   const averageAge = selected.length
     ? (selected.reduce((sum, player) => sum + player.age, 0) / selected.length).toFixed(1)
     : "-";
-  const captain = state.captain ? playerById.get(state.captain) : null;
   const bench = players.filter((player) => !selectedIds.has(player.id));
 
   dom.starterCount.textContent = `${selected.length}/11 首发`;
   dom.totalValue.textContent = formatValue(totalValue);
   dom.averageAge.textContent = averageAge;
   dom.lineupValue.textContent = formatValue(totalValue);
-  dom.captainName.textContent = captain ? captain.name : "未设置";
-  dom.captainBadge.style.opacity = captain ? "1" : "0.35";
   dom.benchCount.textContent = String(bench.length);
 
   dom.lineupList.innerHTML = currentSlots()
@@ -537,7 +506,7 @@ function renderDetails() {
         <li class="lineup-row">
           <span class="lineup-pos">${formationSlot.label}</span>
           <span class="lineup-player">${player ? escapeHtml(player.name) : "空位"}</span>
-          <span class="lineup-tag">${player && player.id === state.captain ? "C" : player ? player.valueText : "-"}</span>
+          <span class="lineup-tag">${player ? player.valueText : "-"}</span>
         </li>
       `;
     })
@@ -549,28 +518,28 @@ function renderDetails() {
 }
 
 function buildLineupText() {
-  const rows = currentSlots()
-    .map((formationSlot) => {
-      const player = playerById.get(state.lineup[formationSlot.id]);
-      const captainMark = player && player.id === state.captain ? " (C)" : "";
-      return `${formationSlot.label}: ${player ? `${player.name}${captainMark} - ${player.club}` : "空位"}`;
-    })
-    .join("\n");
+  const groups = [
+    { label: "门将", match: (slotLabel) => slotLabel === "GK" },
+    { label: "后卫", match: (slotLabel) => /B$|CB$|WB$/.test(slotLabel) },
+    { label: "中场", match: (slotLabel) => /M$/.test(slotLabel) },
+    { label: "前锋", match: (slotLabel) => !(/GK$|B$|CB$|WB$|M$/.test(slotLabel)) }
+  ];
+  const namesByGroup = groups.map((group) => {
+    const names = currentSlots()
+      .filter((formationSlot) => group.match(formationSlot.label))
+      .map((formationSlot) => playerById.get(state.lineup[formationSlot.id])?.name)
+      .filter(Boolean);
+    return `${group.label}：${names.join("、") || "未选择"}`;
+  });
 
-  const bench = players
-    .filter((player) => !selectedPlayers().some((selected) => selected.id === player.id))
-    .map((player) => player.name)
-    .join(", ");
-
-  return `${state.teamName}\n阵型：${state.formation}\n数据日期：${DATA_RETRIEVED}\n\n${rows}\n\n未入选：${bench}`;
+  return [`阵型：${state.formation}`, "", ...namesByGroup].join("\n");
 }
 
 function updateHash() {
   const payload = {
     f: state.formation,
     n: state.teamName,
-    l: state.lineup,
-    c: state.captain
+    l: state.lineup
   };
   const hash = encodeBase64Url(JSON.stringify(payload));
   window.history.replaceState(null, "", `#${hash}`);
@@ -589,8 +558,6 @@ function loadStateFromHash() {
         state.lineup[formationSlot.id] = playerById.has(playerId) ? playerId : null;
       });
     }
-    state.captain = playerById.has(payload.c) ? payload.c : state.captain;
-    ensureCaptain();
   } catch (error) {
     console.warn("Could not load lineup hash", error);
   }
