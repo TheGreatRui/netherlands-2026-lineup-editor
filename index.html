@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>荷兰国家队 2026 首发阵容编辑器</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <img class="flag" src="assets/netherlands-flag.svg" alt="荷兰国旗">
+          <div>
+            <p class="eyebrow">Netherlands 2026</p>
+            <h1>荷兰国家队首发阵容编辑器</h1>
+          </div>
+        </div>
+        <div class="top-stats" aria-label="阵容状态">
+          <span id="starterCount">0/11 首发</span>
+          <span>26 人名单</span>
+          <span id="totalValue">€0m</span>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel roster-panel" aria-labelledby="squadTitle">
+          <div class="panel-head">
+            <div>
+              <p class="kicker">Transfermarkt squad</p>
+              <h2 id="squadTitle">26 人名单</h2>
+            </div>
+            <a class="source-pill" href="https://www.transfermarkt.com/niederlande/startseite/verein/3379" target="_blank" rel="noreferrer">来源</a>
+          </div>
+
+          <label class="searchbox" for="playerSearch">
+            <span>搜索</span>
+            <input id="playerSearch" type="search" autocomplete="off" placeholder="球员、俱乐部或位置">
+          </label>
+
+          <div class="filter-bar" aria-label="位置筛选">
+            <button class="filter-button is-active" type="button" data-filter="ALL">全部</button>
+            <button class="filter-button" type="button" data-filter="GK">门将</button>
+            <button class="filter-button" type="button" data-filter="DEF">后卫</button>
+            <button class="filter-button" type="button" data-filter="MID">中场</button>
+            <button class="filter-button" type="button" data-filter="ATT">前场</button>
+          </div>
+
+          <div id="squadList" class="squad-list" aria-live="polite"></div>
+        </section>
+
+        <section class="builder-section" aria-labelledby="builderTitle">
+          <div class="lineup-toolbar">
+            <label class="control-field" for="teamName">
+              <span>标题</span>
+              <input id="teamName" type="text" value="荷兰国家队 2026">
+            </label>
+
+            <label class="control-field compact" for="formationSelect">
+              <span>阵型</span>
+              <select id="formationSelect">
+                <option value="4-3-3">4-3-3</option>
+                <option value="4-2-3-1">4-2-3-1</option>
+                <option value="3-4-3">3-4-3</option>
+                <option value="3-5-2">3-5-2</option>
+                <option value="4-4-2">4-4-2</option>
+                <option value="5-3-2">5-3-2</option>
+              </select>
+            </label>
+
+            <button id="autoFill" class="icon-button primary" type="button">
+              <span aria-hidden="true">◆</span>
+              默认首发
+            </button>
+          </div>
+
+          <div id="shareCard" class="pitch-card">
+            <div class="pitch-titlebar">
+              <div>
+                <p id="builderTitle" class="kicker">Starting XI</p>
+                <h2 id="pitchTeamName">荷兰国家队 2026</h2>
+              </div>
+              <div class="formation-badge" id="pitchFormation">4-3-3</div>
+            </div>
+
+            <div id="pitch" class="pitch" aria-label="足球场首发阵容"></div>
+          </div>
+        </section>
+
+        <aside class="panel details-panel" aria-labelledby="lineupTitle">
+          <div class="panel-head">
+            <div>
+              <p class="kicker">Lineup sheet</p>
+              <h2 id="lineupTitle">首发名单</h2>
+            </div>
+            <span id="captainBadge" class="captain-badge">C</span>
+          </div>
+
+          <div class="summary-grid">
+            <div>
+              <span>平均年龄</span>
+              <strong id="averageAge">-</strong>
+            </div>
+            <div>
+              <span>首发身价</span>
+              <strong id="lineupValue">€0m</strong>
+            </div>
+            <div>
+              <span>队长</span>
+              <strong id="captainName">未设置</strong>
+            </div>
+          </div>
+
+          <ol id="lineupList" class="lineup-list"></ol>
+
+          <div class="actions">
+            <button id="copyLink" class="icon-button" type="button">
+              <span aria-hidden="true">↗</span>
+              复制链接
+            </button>
+            <button id="copyText" class="icon-button" type="button">
+              <span aria-hidden="true">☰</span>
+              复制名单
+            </button>
+            <button id="clearLineup" class="icon-button danger" type="button">
+              <span aria-hidden="true">×</span>
+              清空
+            </button>
+          </div>
+
+          <section class="bench-section" aria-labelledby="benchTitle">
+            <div class="bench-head">
+              <h3 id="benchTitle">未入选</h3>
+              <span id="benchCount">15</span>
+            </div>
+            <div id="benchList" class="bench-list"></div>
+          </section>
+        </aside>
+      </main>
+
+      <footer class="footer">
+        名单数据来自 Transfermarkt 荷兰队 2026 页面，读取日期：2026-05-28。页面灵感来自 Chosen 11 的阵容编辑体验。
+      </footer>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="script.js"></script>
+  </body>
+</html>
